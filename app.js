@@ -502,43 +502,7 @@ function wire(){
     if(jsonPanel) jsonPanel.style.display = (jsonPanel.style.display==="none"||!jsonPanel.style.display) ? "block" : "none";
   });
   el("closeJsonPanelBtn")?.addEventListener("click", ()=>{ if(jsonPanel) jsonPanel.style.display="none"; });
-    el("applyPasteBtn")?.addEventListener("click", async ()=>{
-    try{
-      const raw = (jsonPaste?.value||"");
-      applyPasteToLocal(raw);
-      if(jsonHint) jsonHint.textContent = "נטען לטבלה (לוקאלי) ✅";
-
-      // אם מחובר – אפשר לשמור גם ל-DB
-      if(fb.enabled && fb.user){
-        if(confirm("לשמור גם ל-Firestore (DB)?")){
-          await importFromPasteJsonToFirestore(raw);
-          await loadFromFirestore();
-          renderTable();
-          if(jsonHint) jsonHint.textContent = "נטען + נשמר ל-DB ✅";
-        }
-      }
-    }catch(e){
-      if(jsonHint) jsonHint.textContent = "שגיאה: " + e.message;
-      alert("ייבוא נכשל: " + e.message);
-    }
-  });
-el("clearApplyPasteBtn")?.addEventListener("click", async ()=>{
-    if(!fb.enabled) return alert("Firebase לא מוגדר (אין Firestore).");
-    if(!fb.user) return alert("כדי לנקות/לייבא צריך להתחבר.");
-    try{
-      const raw = (jsonPaste?.value||"");
-      const ok = confirm("אזהרה: זה ימחק את כל נתוני הרחפנים ב-DB ואז ייבא מה-JSON המודבק. להמשיך?");
-      if(!ok) return;
-      await clearAndImportFromPasteJson(raw);
-      await loadFromFirestore();
-      renderTable();
-      if(jsonHint) jsonHint.textContent = "ניקוי + ייבוא הסתיים בהצלחה ✅";
-      alert("ניקוי + ייבוא הסתיים בהצלחה ✅");
-    }catch(e){
-      if(jsonHint) jsonHint.textContent = "שגיאה: " + e.message;
-      alert("ניקוי/ייבוא נכשל: " + e.message);
-    }
-  });
+    
   el("exportJsonBtn")?.addEventListener("click", async ()=>{
     if(!fb.enabled) return alert("Firebase לא מוגדר (אין Firestore).");
     try{ await exportJsonFromFirestore(); }
