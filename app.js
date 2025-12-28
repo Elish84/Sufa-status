@@ -1,3 +1,11 @@
+if (!window.SUFA_FIREBASE_CONFIG || !window.SUFA_FIREBASE_CONFIG.projectId) {
+  alert('config ב-index.html לא מוגדר. צריך להדביק Firebase');
+  throw new Error('Missing SUFA_FIREBASE_CONFIG');
+}
+
+firebase.initializeApp(window.SUFA_FIREBASE_CONFIG);
+const db = firebase.firestore();
+
 const el = (id)=>document.getElementById(id);
 
 let editMode = false;
