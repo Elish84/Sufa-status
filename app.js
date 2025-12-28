@@ -1,10 +1,8 @@
+/* ===================== Firebase bootstrap ===================== */
 if (!window.SUFA_FIREBASE_CONFIG || !window.SUFA_FIREBASE_CONFIG.projectId) {
   alert('config ב-index.html לא מוגדר. צריך להדביק Firebase');
   throw new Error('Missing SUFA_FIREBASE_CONFIG');
 }
-
-firebase.initializeApp(window.SUFA_FIREBASE_CONFIG);
-const db = firebase.firestore();
 
 const el = (id)=>document.getElementById(id);
 
@@ -35,7 +33,7 @@ function getHeaders(){
     {key:"version", label:"גרסה"},
     {key:"gps", label:"GPS"},
     {key:"charger", label:"מטען"},
-    {key:"video_gps", label:"וידאו‑GPS"},
+    {key:"video_gps", label:"וידאו-GPS"},
     {key:"issues", label:"תקלות / תיקונים"},
     {key:"notes", label:"הערות"},
   ];
@@ -249,19 +247,26 @@ function initFirebase(){
   if(!cfg) return false;
 
   try{
-    fb.app = firebase.initializeApp(cfg);
-    fb.auth = firebase.auth();
+    // ✅ init only once
+    fb.app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(cfg);
     fb.db = firebase.firestore();
+    fb.auth = firebase.auth();
     fb.enabled = true;
 
     fb.auth.onAuthStateChanged(async (user)=>{
       fb.user = user || null;
-      el("logoutBtn").classList.toggle("hidden", !fb.user);
-      el("loginBtn").textContent = fb.user ? "מחובר" : "התחבר";
+      el("logoutBtn")?.classList.toggle("hidden", !fb.user);
+      const loginBtn = el("loginBtn");
+      if(loginBtn) loginBtn.textContent = fb.user ? "מחובר" : "התחבר";
       updateLastUpdated();
+
       if(fb.user){
-        await loadFromFirestore();
-        renderTable();
+        try{
+          await loadFromFirestore();
+          renderTable();
+        }catch(e){
+          console.error(e);
+        }
       }
     });
 
@@ -324,12 +329,12 @@ async function saveToFirestore(){
 async function seedFirestoreIfEmpty(){
   const snap = await dronesColRef().limit(1).get();
   if(!snap.empty) return;
-  // seed from current working
   await saveToFirestore();
 }
 
 async function doLogin(){
   if(!fb.enabled) return alert("Firebase לא מוגדר. צריך להדביק config ב-index.html");
+
   const email = (prompt("אימייל Firebase:", "") || "").trim();
   const password = (prompt("סיסמה:", "") || "").trim();
   if(!email || !password) return;
@@ -348,7 +353,6 @@ async function doLogout(){
   try{ await fb.auth.signOut(); }catch(e){}
 }
 
-
 /* ----------- Admin actions: Import / Clear+Import ----------- */
 async function importAllFromLocalToFirestore(){
   if(!fb.enabled) throw new Error("Firestore not enabled");
@@ -362,10 +366,6 @@ async function importAllFromLocalToFirestore(){
   await saveToFirestore();
 }
 
-/**
- * Deletes ALL drone documents under sufa/status/drones.
- * Note: Firestore batch write limit is 500; we delete in chunks.
- */
 async function clearFirestoreDrones(){
   if(!fb.enabled) throw new Error("Firestore not enabled");
   if(!fb.user) throw new Error("Not logged in");
@@ -380,7 +380,6 @@ async function clearFirestoreDrones(){
     await batch.commit();
   }
 
-  // Clear meta last_updated too (optional)
   await statusDocRef().set({ last_updated: "" }, { merge:true });
 }
 
@@ -391,9 +390,9 @@ async function clearAndImport(){
 
 /* ---------------- Wire ---------------- */
 function wire(){
-  // Import / Clear+Import buttons (actions require login)
   const importBtn = el("importBtn");
   const clearImportBtn = el("clearImportBtn");
+
   if(importBtn) importBtn.addEventListener("click", async ()=>{
     if(!fb.enabled) return alert("Firebase לא מוגדר. צריך להדביק config ב-index.html");
     if(!fb.user) return alert("כדי לייבא ל-DB צריך להתחבר.");
@@ -407,6 +406,7 @@ function wire(){
       alert("ייבוא נכשל: " + e.message);
     }
   });
+
   if(clearImportBtn) clearImportBtn.addEventListener("click", async ()=>{
     if(!fb.enabled) return alert("Firebase לא מוגדר. צריך להדביק config ב-index.html");
     if(!fb.user) return alert("כדי לנקות/לייבא צריך להתחבר.");
@@ -422,17 +422,17 @@ function wire(){
     }
   });
 
-  el("search").addEventListener("input", ()=>renderTable());
-  el("statusFilter").addEventListener("change", ()=>renderTable());
+  el("search")?.addEventListener("input", ()=>renderTable());
+  el("statusFilter")?.addEventListener("change", ()=>renderTable());
 
-  el("addDrone").addEventListener("click", async ()=>{
+  el("addDrone")?.addEventListener("click", async ()=>{
     promptAddDrone();
     if(fb.enabled && fb.user){
       try{ await saveToFirestore(); } catch(e){ alert("שמירה ל-Firestore נכשלה: " + e.message); }
     }
   });
 
-  el("toggleEdit").addEventListener("click", async ()=>{
+  el("toggleEdit")?.addEventListener("click", async ()=>{
     if(editMode){
       applyEditsFromDom();
       editMode = false;
@@ -448,11 +448,12 @@ function wire(){
     }
   });
 
-  el("loginBtn").addEventListener("click", async ()=>{
+  el("loginBtn")?.addEventListener("click", async ()=>{
     if(fb.user) return;
     await doLogin();
   });
-  el("logoutBtn").addEventListener("click", doLogout);
+
+  el("logoutBtn")?.addEventListener("click", doLogout);
 }
 
 (async function init(){
@@ -464,9 +465,10 @@ function wire(){
     stamp();
     renderTable();
   }catch(err){
-    el("lastUpdated").textContent = "שגיאה בטעינת נתונים: " + err.message;
+    const lu = el("lastUpdated");
+    if(lu) lu.textContent = "שגיאה בטעינת נתונים: " + err.message;
     console.error(err);
   }
 
   wire();
-})(); 
+})();
