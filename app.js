@@ -609,6 +609,60 @@ el("clearApplyPasteBtn")?.addEventListener("click", async ()=>{
   });
 
   el("logoutBtn")?.addEventListener("click", doLogout);
+  // ===== JSON Paste → Confirm & Import =====
+el("applyPasteBtn")?.addEventListener("click", async () => {
+  const ta   = el("jsonPaste");
+  const hint = el("jsonPanelHint");
+  const txt  = (ta?.value || "").trim();
+
+  if(!txt){
+    hint.textContent = "❌ לא הודבק JSON";
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = parsePastedJson(txt);
+  } catch(e){
+    hint.textContent = "❌ JSON לא תקין: " + e.message;
+    return;
+  }
+
+  // תמיכה בכמה פורמטים
+  const drones =
+    parsed?.drones ||
+    parsed?.rows ||
+    parsed?.data ||
+    (Array.isArray(parsed) ? parsed : null);
+
+  if(!Array.isArray(drones)){
+    hint.textContent = "❌ פורמט לא נתמך (צריך מערך או {drones:[]})";
+    return;
+  }
+
+  // טעינה לוקאלית לטבלה
+  state.drones = drones;
+  renderTable();
+  hint.textContent = `✅ נטענו ${drones.length} רחפנים לטבלה`;
+
+  // שמירה ל-DB רק אם מחובר
+  if(fb.user){
+    const ok = confirm("לשמור גם ל-Firestore?");
+    if(ok){
+      await importToDb(drones);
+      hint.textContent += " + נשמר ל-DB ✅";
+    }
+  } else {
+    hint.textContent += " (לוקאלי בלבד – התחבר כדי לשמור ל-DB)";
+  }
+});
+
+// ניקוי
+el("clearPasteBtn")?.addEventListener("click", () => {
+  el("jsonPaste").value = "";
+  el("jsonPanelHint").textContent = "";
+});
+
 }
 
 (async function init(){
