@@ -33,7 +33,6 @@ function getHeaders(){
     {key:"version", label:"גרסה"},
     {key:"gps", label:"GPS"},
     {key:"charger", label:"מטען"},
-    {key:"video_gps", label:"וידאו-GPS"},
     {key:"issues", label:"תקלות / תיקונים"},
     {key:"notes", label:"הערות"},
   ];
