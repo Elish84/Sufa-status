@@ -563,7 +563,6 @@ async function exportJsonFromFirestore(){
   });
 
   el("logoutBtn")?.addEventListener("click", doLogout);
-}
 
 (async function init(){
   renderHeader();
