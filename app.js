@@ -183,12 +183,7 @@ if(c.key === "_actions"){
       return;
     }
 
-    const col = fb.db.collection("drones"); // שנה אם אצלך שם אחר
-    const snap = await col.where("id", "==", id).get();
-
-    const batch = fb.db.batch();
-    snap.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
+    await fb.db.collection("drones").doc(id).delete();
 
     // אופציונלי: רענון אחרי מחיקה
     // await loadFromFirestore(); renderTable();
