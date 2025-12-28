@@ -168,23 +168,33 @@ if(c.key === "_actions"){
     btn.className = "btn danger";
     btn.textContent = "מחק";
 
-    btn.onclick = async () => {
-      const id = d.id;
-      if(!confirm(`למחוק את רחפן ${id}?`)) return;
+   btn.onclick = async () => {
+  const id = String(d.id);
+  if(!confirm(`למחוק את רחפן ${id}?`)) return;
 
-      // מחיקה לוקאלית
-      working = working.filter(x => String(x.id) !== String(id));
-      renderTable();
+  // 1) מחיקה לוקאלית (כדי שתרגיש מייד)
+  working = working.filter(x => String(x.id) !== id);
+  renderTable();
 
-      // שמירה ל-Firestore אם מחובר
-      if(fb.enabled){
-        if(!fb.user){
-          alert("כדי לשמור מחיקה ל-DB צריך להתחבר");
-          return;
-        }
-        await saveToFirestore();
-      }
-    };
+  // 2) מחיקה מ-Firestore (כדי שלא יחזור)
+  if(fb.enabled){
+    if(!fb.user){
+      alert("כדי למחוק מה-DB צריך להתחבר.");
+      return;
+    }
+
+    const col = fb.db.collection("drones"); // שנה אם אצלך שם אחר
+    const snap = await col.where("id", "==", id).get();
+
+    const batch = fb.db.batch();
+    snap.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    // אופציונלי: רענון אחרי מחיקה
+    // await loadFromFirestore(); renderTable();
+  }
+};
+
 
     td.appendChild(btn);
   } else {
