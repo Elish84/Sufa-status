@@ -173,7 +173,7 @@ if(c.key === "_actions"){
       if(!confirm(`למחוק את רחפן ${id}?`)) return;
 
       // מחיקה לוקאלית
-      drones = drones.filter(x => String(x.id) !== String(id));
+      working = working.filter(x => String(x.id) !== String(id));
       renderTable();
 
       // שמירה ל-Firestore אם מחובר
