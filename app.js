@@ -48,6 +48,7 @@ function getHeaders(){
     {key:"charger", label:"מטען"},
     {key:"issues", label:"תקלות / תיקונים"},
     {key:"notes", label:"הערות"},
+    {key:"_actions", label:"פעולות"}, 
   ];
 }
 
@@ -154,10 +155,45 @@ function renderTable(){
       {key:"charger", val:boolToMark(!!d.charger), editable:true, type:"bool"},
       {key:"issues", val:d.issues||"", editable:true},
       {key:"notes", val:d.notes||"", editable:true},
+      {key:"_actions"},
     ];
+
 
     for(const c of cells){
       const td = document.createElement("td");
+// === פעולות (מחיקה) ===
+if(c.key === "_actions"){
+  if(editMode){
+    const btn = document.createElement("button");
+    btn.className = "btn danger";
+    btn.textContent = "מחק";
+
+    btn.onclick = async () => {
+      const id = d.id;
+      if(!confirm(`למחוק את רחפן ${id}?`)) return;
+
+      // מחיקה לוקאלית
+      drones = drones.filter(x => String(x.id) !== String(id));
+      renderTable();
+
+      // שמירה ל-Firestore אם מחובר
+      if(fb.enabled){
+        if(!fb.user){
+          alert("כדי לשמור מחיקה ל-DB צריך להתחבר");
+          return;
+        }
+        await saveToFirestore();
+      }
+    };
+
+    td.appendChild(btn);
+  } else {
+    td.textContent = "—";
+  }
+
+  tr.appendChild(td);
+  continue; // חשוב: לדלג לשדה הבא
+}
 
       if(c.key === "status"){
         if(editMode){
