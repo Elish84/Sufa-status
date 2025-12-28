@@ -139,7 +139,6 @@ function renderTable(){
       {key:"version", val:d.version||"", editable:true},
       {key:"gps", val:boolToMark(!!d.gps), editable:true, type:"bool"},
       {key:"charger", val:boolToMark(!!d.charger), editable:true, type:"bool"},
-      {key:"video_gps", val:d.video_gps||"", editable:true},
       {key:"issues", val:d.issues||"", editable:true},
       {key:"notes", val:d.notes||"", editable:true},
     ];
@@ -228,7 +227,7 @@ function promptAddDrone(){
 
   working.drones.push({
     id, location, status, version,
-    gps:false, charger:false, video_gps:"", issues:"", notes:""
+    gps:false, charger:false, issues:"", notes:""
   });
   stamp();
   renderTable();
@@ -316,7 +315,6 @@ async function saveToFirestore(){
       version: d.version||"",
       gps: !!d.gps,
       charger: !!d.charger,
-      video_gps: d.video_gps||"",
       issues: d.issues||"",
       notes: d.notes||"",
     }, { merge:true });
