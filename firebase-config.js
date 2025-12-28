@@ -1,5 +1,5 @@
 // firebase-config.js
-window.firebaseConfig = {
+window.SUFA_FIREBASE_CONFIG = {
   apiKey: "AIzaSyBtf_w7snO_7hyJhv_Z_eFbgzh43FmR2SU",
   authDomain: "sufa-73c50.firebaseapp.com",
   projectId: "sufa-73c50",
