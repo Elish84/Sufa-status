@@ -168,24 +168,43 @@ if(c.key === "_actions"){
     btn.className = "btn danger";
     btn.textContent = "מחק";
 
- btn.onclick = async () => {
-  const id = String(d.id);
-  if(!confirm(`למחוק את רחפן ${id}?`)) return;
+btn.onclick = async () => {
+  const displayId = String(d.id);              // מה שמציגים למשתמש
+  const docId = String(d.docId || d.id);       // מה שמוחקים בפועל (docId אמיתי)
 
-  // 1) מחיקה לוקאלית אמיתית
-  working.drones = working.drones.filter(x => String(x.id) !== id);
+  if(!confirm(`למחוק את רחפן ${displayId}?`)) return;
+
+  // 1) מחיקה לוקאלית (עדיף לפי docId כדי לא למחוק כפולים בטעות)
+  const prev = working.drones.slice();
+  working.drones = working.drones.filter(x => String(x.docId || x.id) !== docId);
   stamp();
   renderTable();
 
-  // 2) מחיקה מ-Firestore (docId = id)
+  // 2) מחיקה מ-Firestore - חייב אותו נתיב של הטעינה
   if(fb.enabled){
-    if(!fb.user){
-      alert("כדי למחוק מה-DB צריך להתחבר.");
-      return;
+    try{
+      if(!fb.user){
+        alert("כדי למחוק מה-DB צריך להתחבר.");
+        working.drones = prev;
+        renderTable();
+        return;
+      }
+
+      // ✅ אם אתה טוען עם dronesColRef() - חובה למחוק ממנו
+      await dronesColRef().doc(docId).delete();
+
+      // ❌ אל תשתמש בזה אם הטעינה אינה מאותה קולקשן:
+      // await fb.db.collection("drones").doc(docId).delete();
+
+    } catch(e){
+      console.error("delete failed:", e);
+      alert("מחיקה מה-DB נכשלה (בדוק הרשאות/נתיב).");
+      working.drones = prev;
+      renderTable();
     }
-    await fb.db.collection("drones").doc(id).delete();
   }
 };
+
 
 
     td.appendChild(btn);
@@ -342,11 +361,12 @@ async function loadFromFirestore(){
 
   const snap = await dronesColRef().get();
   const drones = [];
-  snap.forEach(doc=>{
-    const d = doc.data() || {};
-    d.id = d.id || doc.id;
-    drones.push(d);
-  });
+snap.forEach(docSnap => {
+  const d = docSnap.data() || {};
+  d.docId = docSnap.id;        // 🔑 זה ה-ID האמיתי למחיקה
+  d.id = d.id || docSnap.id;   // זה ה-ID הלוגי להצגה (אם אין)
+  drones.push(d);
+});
 
   if(drones.length){
     working = { last_updated, drones };
