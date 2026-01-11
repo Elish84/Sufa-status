@@ -41,6 +41,7 @@ function stamp(){ working.last_updated = new Date().toISOString().slice(0,16); }
 function getHeaders(){
   return [
     {key:"id", label:"מספר"},
+    { key: "type", label: "סוג" },
     {key:"location", label:"מיקום"},
     {key:"status", label:"סטטוס"},
     {key:"version", label:"גרסה"},
@@ -127,12 +128,14 @@ function updateLastUpdated(){
 function renderTable(){
   const q = normalize(el("search").value);
   const f = el("statusFilter").value;
-
+  const tf = el("typeFilter") ? el("typeFilter").value : "";
+  
   let drones = working.drones.slice();
   if(f) drones = drones.filter(d => d.status === f);
+  if(tf) drones = drones.filter(d => (d.type || "רחפן") === tf);
   if(q){
     drones = drones.filter(d => {
-      const hay = [d.id,d.location,d.status,d.version,d.issues,d.notes]
+      const hay = [d.id,d.type,d.location,d.status,d.version,d.issues,d.notes]
         .map(x=>normalize(x)).join(" | ");
       return hay.includes(q);
     });
@@ -148,6 +151,7 @@ function renderTable(){
     const tr = document.createElement("tr");
     const cells = [
       {key:"id", val:d.id, editable:false},
+      {key:"type", val:d.type || "רחפן", editable:true, type:"select"},
       {key:"location", val:d.location||"", editable:true},
       {key:"status", val:d.status||"", editable:true, type:"status"},
       {key:"version", val:d.version||"", editable:true},
@@ -214,6 +218,21 @@ btn.onclick = async () => {
 
   tr.appendChild(td);
   continue; // חשוב: לדלג לשדה הבא
+}
+if(c.key === "type"){
+  if(editMode){
+    td.innerHTML = `
+      <select class="input editable" data-id="${d.id}" data-key="type">
+        ${["רחפן","תחנה","אחר"].map(t =>
+          `<option ${t === (d.type || "רחפן") ? "selected" : ""}>${t}</option>`
+        ).join("")}
+      </select>
+    `;
+  } else {
+    td.textContent = d.type || "רחפן";
+  }
+  tr.appendChild(td);
+  continue;
 }
 
       if(c.key === "status"){
@@ -365,6 +384,7 @@ snap.forEach(docSnap => {
   const d = docSnap.data() || {};
   d.docId = docSnap.id;        // 🔑 זה ה-ID האמיתי למחיקה
   d.id = d.id || docSnap.id;   // זה ה-ID הלוגי להצגה (אם אין)
+  d.type = d.type || "רחפן";
   drones.push(d);
 });
 
@@ -386,6 +406,7 @@ async function saveToFirestore(){
     const ref = dronesColRef().doc(id);
     batch.set(ref, {
       id,
+      type: "רחפן",          // ← חדש
       location: d.location||"",
       status: d.status||"",
       version: d.version||"",
@@ -502,6 +523,7 @@ function parsePastedJson(raw){
   obj.drones = (obj.drones||[])
     .map(d=>({
       id: String(d.id||"").trim(),
+      type: d.type || "רחפן",   // ← חובה
       location: d.location || "",
       status: d.status || "",
       version: d.version || "",
@@ -601,7 +623,7 @@ function wire(){
 
   el("search")?.addEventListener("input", ()=>renderTable());
   el("statusFilter")?.addEventListener("change", ()=>renderTable());
-
+  el("typeFilter")?.addEventListener("change", ()=>renderTable());
   el("addDrone")?.addEventListener("click", async ()=>{
     promptAddDrone();
     if(fb.enabled && fb.user){
