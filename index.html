@@ -16,6 +16,12 @@
     <div class="actions">
       <input id="search" class="input" type="search" placeholder="חיפוש (מס׳ רחפן / מיקום / הערות)..." />
       <select id="statusFilter" class="input">
+        <select id="typeFilter" class="input">
+  <option value="">כל הסוגים</option>
+  <option value="רחפן">רחפן</option>
+  <option value="תחנה">תחנה</option>
+  <option value="אחר">אחר</option>
+</select>
         <option value="">כל הסטטוסים</option>
         <option>תקין</option>
         <option>תקין – בשלבי בדיקה</option>
@@ -62,7 +68,7 @@
     <textarea id="jsonPaste" class="input" style="width:100%; min-height:180px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;" placeholder='{"last_updated":"2025-12-28T12:34","drones":[{"id":"7004","status":"תקין","location":"תעש – יפו","gps":true,"charger":true}]}'></textarea>
     <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
       <button id="applyPasteBtn" class="btn ghost" title="ייבוא (Upsert) ל-DB">ייבוא ל‑DB</button>
-      <button id="clearApplyPasteBtn" class="btn danger" title="ניקוי מלא של DB ואז ייבוא מהטקסט">ניקוי + ייבוא</button>
+      <button id="clearPasteBtn" class="btn danger" title="ניקוי מלא של DB ואז ייבוא מהטקסט">ניקוי + ייבוא</button>
       <button id="closeJsonPanelBtn" class="btn ghost" title="סגור">סגור</button>
     </div>
     <div id="jsonPanelHint" style="margin-top:8px; opacity:.85;"></div>
