@@ -151,7 +151,7 @@ function renderTable(){
     const tr = document.createElement("tr");
     const cells = [
       {key:"id", val:d.id, editable:false},
-      {key:"type", val:d.type || "רחפן", editable:true, type:"select"},
+      {key:"type", val:d.type || "רחפן", editable:true, type:"type"},
       {key:"location", val:d.location||"", editable:true},
       {key:"status", val:d.status||"", editable:true, type:"status"},
       {key:"version", val:d.version||"", editable:true},
