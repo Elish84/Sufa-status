@@ -16,12 +16,6 @@
     <div class="actions">
       <input id="search" class="input" type="search" placeholder="חיפוש (מס׳ רחפן / מיקום / הערות)..." />
       <select id="statusFilter" class="input">
-        <select id="typeFilter" class="input">
-  <option value="">כל הסוגים</option>
-  <option value="רחפן">רחפן</option>
-  <option value="תחנה">תחנה</option>
-  <option value="אחר">אחר</option>
-</select>
         <option value="">כל הסטטוסים</option>
         <option>תקין</option>
         <option>תקין – בשלבי בדיקה</option>
@@ -30,6 +24,14 @@
         <option>נמסר</option>
         <option>חדש</option>
       </select>
+      
+      <select id="typeFilter" class="input">
+        <option value="">כל הסוגים</option>
+        <option value="רחפן">רחפן</option>
+        <option value="תחנה">תחנה</option>
+        <option value="אחר">אחר</option>
+      </select>
+
 
       <button id="addDrone" class="btn ghost" title="הוספת רחפן חדש לטבלה">הוסף רחפן</button>
       <button id="toggleEdit" class="btn ghost" title="עריכה">עריכה</button>
