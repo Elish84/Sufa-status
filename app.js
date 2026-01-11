@@ -406,7 +406,7 @@ async function saveToFirestore(){
     const ref = dronesColRef().doc(id);
     batch.set(ref, {
       id,
-      type: "רחפן",          // ← חדש
+      type: d.type || "רחפן",
       location: d.location||"",
       status: d.status||"",
       version: d.version||"",
