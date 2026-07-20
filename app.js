@@ -36,13 +36,23 @@ const ALL_STATUSES = [
   "לא תקין",
   "במעקב",
   "נמסר",
-  "חדש"
+  "חדש",
+  "לא ידוע"
+];
+
+const ALL_TYPES = [
+  "רחפן",
+  "רחפן EGV",
+  "Osprey-H",
+  "תחנה",
+  "אחר"
 ];
 
 function statusClass(status){
   if(status === "תקין" || status === "תקין – בשלבי בדיקה") return "ok";
   if(status === "רחפן תקין- חוסר בחומרה") return "missing-hw";
   if(status === "רחפן מוכן למסירה") return "ready";
+  if(status === "לא ידוע") return "unknown";
   if(status === "במעקב") return "warn";
   if(status === "לא תקין") return "bad";
   if(status === "נמסר") return "delivered";
@@ -120,6 +130,7 @@ function renderKpis(drones){
     {n: by["במעקב"]||0, l:"במעקב"},
     {n: by["נמסר"]||0, l:"נמסר"},
     {n: by["חדש"]||0, l:"חדשים"},
+    {n: by["לא ידוע"]||0, l:"לא ידוע"},
     {n: chargerOk, l:"תקין + מטען"},
   ];
 
@@ -238,7 +249,7 @@ if(c.key === "type"){
   if(editMode){
     td.innerHTML = `
       <select class="input editable" data-id="${d.id}" data-key="type">
-        ${["רחפן","תחנה","אחר"].map(t =>
+        ${ALL_TYPES.map(t =>
           `<option ${t === (d.type || "רחפן") ? "selected" : ""}>${t}</option>`
         ).join("")}
       </select>
@@ -432,7 +443,8 @@ function renderDashboard(){
       "לא תקין": "#b00020",
       "במעקב": "#b07a00",
       "נמסר": "#2344b8",
-      "חדש": "#777777"
+      "חדש": "#777777",
+      "לא ידוע": "#7e57c2"
     };
 
     const maxCount = filtered.length || 1;

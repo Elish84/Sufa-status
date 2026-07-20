@@ -103,6 +103,7 @@ body{
 .badge.new{background:rgba(85,85,85,.22); color:#ddd}
 .badge.missing-hw{background:rgba(225,130,0,.26); color:#ffd685; border-color:rgba(255,160,0,.4)}
 .badge.ready{background:rgba(0,180,160,.26); color:#85ffed; border-color:rgba(0,210,180,.4)}
+.badge.unknown{background:rgba(120,80,180,.26); color:#d8b4fe; border-color:rgba(160,110,240,.4)}
 
 /* Tab Navigation */
 .nav-tabs {
