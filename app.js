@@ -151,14 +151,19 @@ function updateLastUpdated(){
   el("lastUpdated").textContent = txt;
 }
 
-function renderTable(){
-  const q = normalize(el("search").value);
-  const f = el("statusFilter").value;
-  const tf = el("typeFilter") ? el("typeFilter").value : "";
+let selectedStatuses = new Set();
+let selectedTypes = new Set();
+
+function getFilteredDrones(){
+  const q = normalize(el("search") ? el("search").value : "");
   
-  let drones = working.drones.slice();
-  if(f) drones = drones.filter(d => d.status === f);
-  if(tf) drones = drones.filter(d => (d.type || "רחפן") === tf);
+  let drones = (working.drones || []).slice();
+  if(selectedStatuses.size > 0){
+    drones = drones.filter(d => selectedStatuses.has(d.status));
+  }
+  if(selectedTypes.size > 0){
+    drones = drones.filter(d => selectedTypes.has(d.type || "רחפן"));
+  }
   if(q){
     drones = drones.filter(d => {
       const hay = [d.id,d.type,d.location,d.status,d.version,d.issues,d.notes]
@@ -166,7 +171,11 @@ function renderTable(){
       return hay.includes(q);
     });
   }
+  return drones;
+}
 
+function renderTable(){
+  let drones = getFilteredDrones();
   drones = sortDrones(drones);
   renderKpis(drones);
 
@@ -351,28 +360,6 @@ function promptAddDrone(){
 
 /* ---------------- DASHBOARD LOGIC ---------------- */
 let activeTab = "table";
-let selectedStatuses = new Set();
-let selectedTypes = new Set();
-
-function getFilteredDrones(){
-  const q = normalize(el("search") ? el("search").value : "");
-  
-  let drones = (working.drones || []).slice();
-  if(selectedStatuses.size > 0){
-    drones = drones.filter(d => selectedStatuses.has(d.status));
-  }
-  if(selectedTypes.size > 0){
-    drones = drones.filter(d => selectedTypes.has(d.type || "רחפן"));
-  }
-  if(q){
-    drones = drones.filter(d => {
-      const hay = [d.id,d.type,d.location,d.status,d.version,d.issues,d.notes]
-        .map(x=>normalize(x)).join(" | ");
-      return hay.includes(q);
-    });
-  }
-  return drones;
-}
 
 function initMultiSelects(){
   const statusOptionsContainer = el("statusMultiOptions");
