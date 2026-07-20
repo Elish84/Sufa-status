@@ -351,15 +351,19 @@ function promptAddDrone(){
 
 /* ---------------- DASHBOARD LOGIC ---------------- */
 let activeTab = "table";
+let selectedStatuses = new Set();
+let selectedTypes = new Set();
 
 function getFilteredDrones(){
   const q = normalize(el("search") ? el("search").value : "");
-  const f = el("statusFilter") ? el("statusFilter").value : "";
-  const tf = el("typeFilter") ? el("typeFilter").value : "";
   
   let drones = (working.drones || []).slice();
-  if(f) drones = drones.filter(d => d.status === f);
-  if(tf) drones = drones.filter(d => (d.type || "רחפן") === tf);
+  if(selectedStatuses.size > 0){
+    drones = drones.filter(d => selectedStatuses.has(d.status));
+  }
+  if(selectedTypes.size > 0){
+    drones = drones.filter(d => selectedTypes.has(d.type || "רחפן"));
+  }
   if(q){
     drones = drones.filter(d => {
       const hay = [d.id,d.type,d.location,d.status,d.version,d.issues,d.notes]
@@ -368,6 +372,134 @@ function getFilteredDrones(){
     });
   }
   return drones;
+}
+
+function initMultiSelects(){
+  const statusOptionsContainer = el("statusMultiOptions");
+  if(statusOptionsContainer){
+    statusOptionsContainer.innerHTML = ALL_STATUSES.map((s, idx) => `
+      <label class="ms-option-row">
+        <input type="checkbox" value="${s}" id="st_opt_${idx}" />
+        <span class="badge ${statusClass(s)}" style="font-size:11px;">${s}</span>
+      </label>
+    `).join("");
+  }
+
+  const typeOptionsContainer = el("typeMultiOptions");
+  if(typeOptionsContainer){
+    typeOptionsContainer.innerHTML = ALL_TYPES.map((t, idx) => `
+      <label class="ms-option-row">
+        <input type="checkbox" value="${t}" id="tp_opt_${idx}" />
+        <span>${t}</span>
+      </label>
+    `).join("");
+  }
+
+  const statusWrap = el("statusMultiWrap");
+  const statusBtn = el("statusMultiBtn");
+  const statusDropdown = el("statusMultiDropdown");
+
+  const typeWrap = el("typeMultiWrap");
+  const typeBtn = el("typeMultiBtn");
+  const typeDropdown = el("typeMultiDropdown");
+
+  statusBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    typeDropdown?.classList.add("hidden");
+    typeWrap?.classList.remove("open");
+    statusDropdown?.classList.toggle("hidden");
+    statusWrap?.classList.toggle("open");
+  });
+
+  typeBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    statusDropdown?.classList.add("hidden");
+    statusWrap?.classList.remove("open");
+    typeDropdown?.classList.toggle("hidden");
+    typeWrap?.classList.toggle("open");
+  });
+
+  document.addEventListener("click", (e) => {
+    if(!statusWrap?.contains(e.target)){
+      statusDropdown?.classList.add("hidden");
+      statusWrap?.classList.remove("open");
+    }
+    if(!typeWrap?.contains(e.target)){
+      typeDropdown?.classList.add("hidden");
+      typeWrap?.classList.remove("open");
+    }
+  });
+
+  statusDropdown?.addEventListener("click", (e) => e.stopPropagation());
+  typeDropdown?.addEventListener("click", (e) => e.stopPropagation());
+
+  statusOptionsContainer?.querySelectorAll("input[type='checkbox']").forEach(cb => {
+    cb.addEventListener("change", () => {
+      if(cb.checked) selectedStatuses.add(cb.value);
+      else selectedStatuses.delete(cb.value);
+      updateMultiSelectLabels();
+      renderAllViews();
+    });
+  });
+
+  typeOptionsContainer?.querySelectorAll("input[type='checkbox']").forEach(cb => {
+    cb.addEventListener("change", () => {
+      if(cb.checked) selectedTypes.add(cb.value);
+      else selectedTypes.delete(cb.value);
+      updateMultiSelectLabels();
+      renderAllViews();
+    });
+  });
+
+  el("statusSelectAllBtn")?.addEventListener("click", () => {
+    selectedStatuses = new Set(ALL_STATUSES);
+    statusOptionsContainer?.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = true);
+    updateMultiSelectLabels();
+    renderAllViews();
+  });
+  el("statusClearAllBtn")?.addEventListener("click", () => {
+    selectedStatuses.clear();
+    statusOptionsContainer?.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = false);
+    updateMultiSelectLabels();
+    renderAllViews();
+  });
+
+  el("typeSelectAllBtn")?.addEventListener("click", () => {
+    selectedTypes = new Set(ALL_TYPES);
+    typeOptionsContainer?.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = true);
+    updateMultiSelectLabels();
+    renderAllViews();
+  });
+  el("typeClearAllBtn")?.addEventListener("click", () => {
+    selectedTypes.clear();
+    typeOptionsContainer?.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = false);
+    updateMultiSelectLabels();
+    renderAllViews();
+  });
+}
+
+function updateMultiSelectLabels(){
+  const statusLabel = el("statusMultiLabel");
+  if(statusLabel){
+    if(selectedStatuses.size === 0 || selectedStatuses.size === ALL_STATUSES.length){
+      statusLabel.textContent = "כל הסטטוסים";
+    } else if(selectedStatuses.size === 1){
+      statusLabel.textContent = Array.from(selectedStatuses)[0];
+    } else {
+      statusLabel.textContent = `${selectedStatuses.size} סטטוסים נבחרו`;
+    }
+  }
+
+  const typeLabel = el("typeMultiLabel");
+  if(typeLabel){
+    if(selectedTypes.size === 0 || selectedTypes.size === ALL_TYPES.length){
+      typeLabel.textContent = "כל הסוגים";
+    } else if(selectedTypes.size === 1){
+      typeLabel.textContent = Array.from(selectedTypes)[0];
+    } else {
+      typeLabel.textContent = `${selectedTypes.size} סוגים נבחרו`;
+    }
+  }
 }
 
 function renderAllViews(){
@@ -908,9 +1040,8 @@ function wire(){
     renderDashboard();
   });
 
+  initMultiSelects();
   el("search")?.addEventListener("input", ()=>renderAllViews());
-  el("statusFilter")?.addEventListener("change", ()=>renderAllViews());
-  el("typeFilter")?.addEventListener("change", ()=>renderAllViews());
   el("addDrone")?.addEventListener("click", async ()=>{
     promptAddDrone();
     if(fb.enabled && fb.user){

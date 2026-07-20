@@ -20,27 +20,36 @@
 
     <div class="actions">
       <input id="search" class="input" type="search" placeholder="חיפוש (מס׳ רחפן / מיקום / הערות)..." />
-      <select id="statusFilter" class="input">
-        <option value="">כל הסטטוסים</option>
-        <option>תקין</option>
-        <option>תקין – בשלבי בדיקה</option>
-        <option>רחפן תקין- חוסר בחומרה</option>
-        <option>רחפן מוכן למסירה</option>
-        <option>לא תקין</option>
-        <option>במעקב</option>
-        <option>נמסר</option>
-        <option>חדש</option>
-        <option>לא ידוע</option>
-      </select>
+
+      <!-- Status Multi Select -->
+      <div class="multi-select-wrap" id="statusMultiWrap">
+        <button type="button" class="multi-select-btn" id="statusMultiBtn">
+          <span id="statusMultiLabel">כל הסטטוסים</span>
+          <span class="arrow">▼</span>
+        </button>
+        <div class="multi-select-dropdown hidden" id="statusMultiDropdown">
+          <div class="multi-select-actions">
+            <button type="button" class="ms-action-btn" id="statusSelectAllBtn">בחר הכל</button>
+            <button type="button" class="ms-action-btn" id="statusClearAllBtn">נקה הכל</button>
+          </div>
+          <div class="multi-select-options" id="statusMultiOptions"></div>
+        </div>
+      </div>
       
-      <select id="typeFilter" class="input">
-        <option value="">כל הסוגים</option>
-        <option value="רחפן">רחפן</option>
-        <option value="רחפן EGV">רחפן EGV</option>
-        <option value="Osprey-H">Osprey-H</option>
-        <option value="תחנה">תחנה</option>
-        <option value="אחר">אחר</option>
-      </select>
+      <!-- Type Multi Select -->
+      <div class="multi-select-wrap" id="typeMultiWrap">
+        <button type="button" class="multi-select-btn" id="typeMultiBtn">
+          <span id="typeMultiLabel">כל הסוגים</span>
+          <span class="arrow">▼</span>
+        </button>
+        <div class="multi-select-dropdown hidden" id="typeMultiDropdown">
+          <div class="multi-select-actions">
+            <button type="button" class="ms-action-btn" id="typeSelectAllBtn">בחר הכל</button>
+            <button type="button" class="ms-action-btn" id="typeClearAllBtn">נקה הכל</button>
+          </div>
+          <div class="multi-select-options" id="typeMultiOptions"></div>
+        </div>
+      </div>
 
 
       <button id="addDrone" class="btn ghost" title="הוספת רחפן חדש לטבלה">הוסף רחפן</button>

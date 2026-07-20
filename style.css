@@ -41,6 +41,108 @@ body{
   min-width: 190px;
   outline:none;
 }
+
+/* Multi Select Component */
+.multi-select-wrap {
+  position: relative;
+  display: inline-block;
+}
+.multi-select-btn {
+  background: #0f1a31;
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-width: 190px;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.33px;
+  text-align: right;
+  user-select: none;
+}
+.multi-select-btn:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.multi-select-btn .arrow {
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+.multi-select-wrap.open .multi-select-btn .arrow {
+  transform: rotate(180deg);
+}
+
+.multi-select-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 100;
+  min-width: 230px;
+  background: #0f1a31;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(12px);
+}
+.multi-select-dropdown.hidden {
+  display: none !important;
+}
+
+.multi-select-actions {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.ms-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.ms-action-btn:hover {
+  background: rgba(47, 107, 255, 0.15);
+}
+
+.multi-select-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.ms-option-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+.ms-option-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.ms-option-row input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
 .btn{
   border:1px solid var(--line);
   background:var(--accent);
