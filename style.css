@@ -101,14 +101,281 @@ body{
 .badge.bad{background:rgba(176,0,32,.22); color:#ffb2bd}
 .badge.delivered{background:rgba(35,68,184,.22); color:#b9ccff}
 .badge.new{background:rgba(85,85,85,.22); color:#ddd}
+.badge.missing-hw{background:rgba(225,130,0,.26); color:#ffd685; border-color:rgba(255,160,0,.4)}
+.badge.ready{background:rgba(0,180,160,.26); color:#85ffed; border-color:rgba(0,210,180,.4)}
 
-.pill{
-  display:inline-flex; align-items:center; justify-content:center;
-  width:22px; height:22px; border-radius:6px;
-  border:1px solid var(--line);
-  background:#0f1a31;
-  font-weight:900;
+/* Tab Navigation */
+.nav-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(15, 26, 49, 0.7);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
 }
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.tab-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(47, 107, 255, 0.35);
+}
+.tab-icon {
+  font-size: 15px;
+}
+
+.tab-view {
+  display: block;
+}
+.tab-view.hidden {
+  display: none !important;
+}
+
+/* Dashboard Styling */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sub-badge {
+  font-size: 12px;
+  font-weight: 600;
+  background: #0f1a31;
+  padding: 2px 8px;
+  border-radius: 99px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.dash-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.dash-kpi-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.dash-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.25);
+}
+.dash-kpi-card .kpi-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+.dash-kpi-card .kpi-num {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+.dash-kpi-card .kpi-label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+  font-weight: 500;
+}
+.dash-kpi-card .kpi-sub {
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.dash-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 860px) {
+  .dash-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dash-card {
+  margin-bottom: 0;
+}
+
+/* Status Distribution Bars */
+.status-dist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.dist-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dist-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+}
+.dist-bar-track {
+  height: 10px;
+  background: #0f1a31;
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.dist-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+/* Hardware Readiness */
+.hw-readiness-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+.hw-item {
+  background: #0f1a31;
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+.hw-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* Location breakdown */
+.location-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-left: 4px;
+}
+.loc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0f1a31;
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+.loc-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+.loc-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Drone Cards Grid */
+.drone-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.drone-card-item {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.drone-card-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.2);
+}
+.drone-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.drone-card-id {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+.drone-card-type {
+  font-size: 11px;
+  background: #0f1a31;
+  border: 1px solid var(--line);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+}
+.drone-card-location {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.drone-card-hw {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.hw-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #0f1a31;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.hw-tag.ok {
+  color: #a7ffbf;
+  border-color: rgba(30,127,58,.4);
+  background: rgba(30,127,58,.15);
+}
+.drone-card-notes {
+  font-size: 12px;
+  color: var(--muted);
+  background: #0b1220;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+  min-height: 28px;
+}
+
 .pill.on{background:rgba(47,107,255,.22); color:#b9ccff}
 
 .editable{
@@ -118,3 +385,4 @@ body{
 }
 .footnote{color:var(--muted); font-size:12px; margin-top:10px}
 code{background:#0f1a31; padding:2px 6px; border-radius:8px; border:1px solid var(--line)}
+

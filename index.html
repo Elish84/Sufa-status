@@ -13,12 +13,19 @@
       <div class="sub" id="lastUpdated">טוען…</div>
     </div>
 
+    <div class="nav-tabs">
+      <button id="tabTableBtn" class="tab-btn active"><span class="tab-icon">📋</span> טבלת רחפנים</button>
+      <button id="tabDashBtn" class="tab-btn"><span class="tab-icon">📊</span> דשבורד ויזואלי</button>
+    </div>
+
     <div class="actions">
       <input id="search" class="input" type="search" placeholder="חיפוש (מס׳ רחפן / מיקום / הערות)..." />
       <select id="statusFilter" class="input">
         <option value="">כל הסטטוסים</option>
         <option>תקין</option>
         <option>תקין – בשלבי בדיקה</option>
+        <option>רחפן תקין- חוסר בחומרה</option>
+        <option>רחפן מוכן למסירה</option>
         <option>לא תקין</option>
         <option>במעקב</option>
         <option>נמסר</option>
@@ -43,19 +50,81 @@
   </header>
 
   <main class="container">
-    <section class="cards">
-      <div class="card">
-        <div class="cardTitle">סיכום</div>
-        <div class="kpis" id="kpis"></div>
-      </div>
-    </section>
+    <!-- TABLE VIEW TAB -->
+    <div id="tableView" class="tab-view active">
+      <section class="cards">
+        <div class="card">
+          <div class="cardTitle">סיכום סטטוסים</div>
+          <div class="kpis" id="kpis"></div>
+        </div>
+      </section>
 
-    <section class="tableWrap">
-      <table class="table" id="table">
-        <thead><tr id="theadRow"></tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </section>
+      <section class="tableWrap">
+        <table class="table" id="table">
+          <thead><tr id="theadRow"></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- DASHBOARD VIEW TAB -->
+    <div id="dashboardView" class="tab-view hidden">
+      <!-- High Level Dashboard KPI Cards -->
+      <section class="dash-kpi-grid" id="dashKpiGrid">
+        <!-- Injected dynamically via JS -->
+      </section>
+
+      <!-- Charts & Visual Breakdown Grid -->
+      <div class="dash-grid-2col">
+        <!-- Status Distribution Bar Chart -->
+        <section class="card dash-card">
+          <div class="cardTitle flex-between">
+            <span>📊 התפלגות לפי סטטוס</span>
+            <span class="sub-badge" id="dashStatusTotalCount">0 כלים</span>
+          </div>
+          <div class="status-dist-container" id="statusDistContainer">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+
+        <!-- Hardware & Readiness Overview -->
+        <section class="card dash-card">
+          <div class="cardTitle">🔌 כשירות ציוד נלווה (GPS / מטענים)</div>
+          <div class="hw-readiness-container" id="hwReadinessContainer">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Location Breakdown & Cards Grid -->
+      <div class="dash-grid-2col" style="margin-top: 14px;">
+        <!-- Location Breakdown Card -->
+        <section class="card dash-card">
+          <div class="cardTitle">📍 פילוח לפי מיקום / אתר</div>
+          <div class="location-list" id="locationList">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+
+        <!-- Quick Summary & Filter Hints -->
+        <section class="card dash-card">
+          <div class="cardTitle">💡 תובנות ודגשים מהירים</div>
+          <div class="insights-container" id="dashInsights">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Filtered Drones Grid Matrix -->
+      <section class="dash-section" style="margin-top: 16px;">
+        <div class="section-header">
+          <h3>📦 תצוגת כרטיסי כלים מסוננים (<span id="dashFilteredCount">0</span>)</h3>
+        </div>
+        <div class="drone-cards-grid" id="droneCardsGrid">
+          <!-- Injected via JS -->
+        </div>
+      </section>
+    </div>
 
     <p class="footnote">
       מקור נתונים: Firestore (אם מוגדר). אחרת – קובץ מקומי <code>drones.json</code>. ייבוא/ניקוי+ייבוא מתבצעים מהדבקת JSON.

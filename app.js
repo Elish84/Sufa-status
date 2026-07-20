@@ -28,8 +28,21 @@ function downloadTextFile(filename, text){
 
 function boolToMark(v){ return v ? "✓" : ""; }
 
+const ALL_STATUSES = [
+  "תקין",
+  "תקין – בשלבי בדיקה",
+  "רחפן תקין- חוסר בחומרה",
+  "רחפן מוכן למסירה",
+  "לא תקין",
+  "במעקב",
+  "נמסר",
+  "חדש"
+];
+
 function statusClass(status){
   if(status === "תקין" || status === "תקין – בשלבי בדיקה") return "ok";
+  if(status === "רחפן תקין- חוסר בחומרה") return "missing-hw";
+  if(status === "רחפן מוכן למסירה") return "ready";
   if(status === "במעקב") return "warn";
   if(status === "לא תקין") return "bad";
   if(status === "נמסר") return "delivered";
@@ -86,7 +99,7 @@ function renderHeader(){
       if(sortState.key === key) sortState.dir = (sortState.dir==="asc") ? "desc" : "asc";
       else { sortState.key = key; sortState.dir = "asc"; }
       renderHeader();
-      renderTable();
+      renderAllViews();
     });
   });
 }
@@ -95,12 +108,14 @@ function renderKpis(drones){
   const total = drones.length;
   const by = {};
   for(const d of drones) by[d.status] = (by[d.status]||0)+1;
-  const chargerOk = drones.filter(d=>d.status==="תקין" && d.charger).length;
+  const chargerOk = drones.filter(d=>(d.status==="תקין" || d.status==="רחפן מוכן למסירה") && d.charger).length;
 
   const items = [
     {n: total, l:"סה״כ"},
     {n: by["תקין"]||0, l:"תקינים"},
-    {n: by["תקין – בשלבי בדיקה"]||0, l:"תקין – בדיקה"},
+    {n: by["תקין – בשלבי בדיקה"]||0, l:"בשלבי בדיקה"},
+    {n: by["רחפן תקין- חוסר בחומרה"]||0, l:"חוסר בחומרה"},
+    {n: by["רחפן מוכן למסירה"]||0, l:"מוכן למסירה"},
     {n: by["לא תקין"]||0, l:"לא תקין"},
     {n: by["במעקב"]||0, l:"במעקב"},
     {n: by["נמסר"]||0, l:"נמסר"},
@@ -239,7 +254,7 @@ if(c.key === "type"){
         if(editMode){
           td.innerHTML = `
             <select class="input editable" data-id="${d.id}" data-key="status">
-              ${["תקין","תקין – בשלבי בדיקה","לא תקין","במעקב","נמסר","חדש"].map(s=>
+              ${ALL_STATUSES.map(s=>
                 `<option ${s===d.status?"selected":""}>${s}</option>`
               ).join("")}
             </select>
@@ -311,7 +326,8 @@ function promptAddDrone(){
   }
 
   const location = (prompt("מיקום:", "תעש") || "").trim();
-  const status = (prompt("סטטוס (תקין / לא תקין / במעקב / נמסר / חדש / תקין – בשלבי בדיקה):", "תקין") || "תקין").trim();
+  const statusListStr = ALL_STATUSES.join(" / ");
+  const status = (prompt(`סטטוס (${statusListStr}):`, "תקין") || "תקין").trim();
   const version = (prompt("גרסת תוכנה (אופציונלי):", "") || "").trim();
 
   working.drones.push({
@@ -319,7 +335,247 @@ function promptAddDrone(){
     gps:false, charger:false, issues:"", notes:""
   });
   stamp();
+  renderAllViews();
+}
+
+/* ---------------- DASHBOARD LOGIC ---------------- */
+let activeTab = "table";
+
+function getFilteredDrones(){
+  const q = normalize(el("search") ? el("search").value : "");
+  const f = el("statusFilter") ? el("statusFilter").value : "";
+  const tf = el("typeFilter") ? el("typeFilter").value : "";
+  
+  let drones = (working.drones || []).slice();
+  if(f) drones = drones.filter(d => d.status === f);
+  if(tf) drones = drones.filter(d => (d.type || "רחפן") === tf);
+  if(q){
+    drones = drones.filter(d => {
+      const hay = [d.id,d.type,d.location,d.status,d.version,d.issues,d.notes]
+        .map(x=>normalize(x)).join(" | ");
+      return hay.includes(q);
+    });
+  }
+  return drones;
+}
+
+function renderAllViews(){
   renderTable();
+  renderDashboard();
+}
+
+function renderDashboard(){
+  const allDrones = working.drones || [];
+  const filtered = getFilteredDrones();
+  const sorted = sortDrones(filtered);
+
+  // 1. KPI Cards
+  const total = allDrones.length;
+  const readyCount = allDrones.filter(d => d.status === "רחפן מוכן למסירה").length;
+  const missingHwCount = allDrones.filter(d => d.status === "רחפן תקין- חוסר בחומרה").length;
+  const okTotal = allDrones.filter(d => d.status === "תקין" || d.status === "תקין – בשלבי בדיקה" || d.status === "רחפן מוכן למסירה").length;
+  const badTotal = allDrones.filter(d => d.status === "לא תקין" || d.status === "במעקב").length;
+
+  const kpiGrid = el("dashKpiGrid");
+  if(kpiGrid){
+    kpiGrid.innerHTML = `
+      <div class="dash-kpi-card">
+        <span class="kpi-icon">📦</span>
+        <div class="kpi-num">${total}</div>
+        <div class="kpi-label">סה״כ ציוד במערכת</div>
+        <div class="kpi-sub">${filtered.length} מסוננים כעת</div>
+      </div>
+      <div class="dash-kpi-card" style="border-top: 3px solid #00d2b4;">
+        <span class="kpi-icon">🚀</span>
+        <div class="kpi-num" style="color: #85ffed;">${readyCount}</div>
+        <div class="kpi-label">רחפנים מוכנים למסירה</div>
+        <div class="kpi-sub">מוכנים למשלוח מיידי</div>
+      </div>
+      <div class="dash-kpi-card" style="border-top: 3px solid #ffa000;">
+        <span class="kpi-icon">🛠️</span>
+        <div class="kpi-num" style="color: #ffd685;">${missingHwCount}</div>
+        <div class="kpi-label">תקין - חוסר בחומרה</div>
+        <div class="kpi-sub">ממתינים להשלמת ציוד</div>
+      </div>
+      <div class="dash-kpi-card" style="border-top: 3px solid #2f6bff;">
+        <span class="kpi-icon">✅</span>
+        <div class="kpi-num" style="color: #a7ffbf;">${okTotal}</div>
+        <div class="kpi-label">סה״כ תקינים ומוכנים</div>
+        <div class="kpi-sub">${total ? Math.round((okTotal/total)*100) : 0}% מסך הכלים</div>
+      </div>
+      <div class="dash-kpi-card" style="border-top: 3px solid #b00020;">
+        <span class="kpi-icon">⚠️</span>
+        <div class="kpi-num" style="color: #ffb2bd;">${badTotal}</div>
+        <div class="kpi-label">לא תקין / במעקב</div>
+        <div class="kpi-sub">דורשים טיפול/תיקון</div>
+      </div>
+    `;
+  }
+
+  // 2. Status Distribution Chart
+  const statusDistContainer = el("statusDistContainer");
+  if(statusDistContainer){
+    const dashStatusTotalCount = el("dashStatusTotalCount");
+    if(dashStatusTotalCount) dashStatusTotalCount.textContent = `${filtered.length} כלים מסוננים`;
+
+    const counts = {};
+    for(const s of ALL_STATUSES) counts[s] = 0;
+    for(const d of filtered){
+      counts[d.status] = (counts[d.status] || 0) + 1;
+    }
+
+    const statusColors = {
+      "תקין": "#1e7f3a",
+      "תקין – בשלבי בדיקה": "#2e9e4f",
+      "רחפן תקין- חוסר בחומרה": "#e18200",
+      "רחפן מוכן למסירה": "#00b4a0",
+      "לא תקין": "#b00020",
+      "במעקב": "#b07a00",
+      "נמסר": "#2344b8",
+      "חדש": "#777777"
+    };
+
+    const maxCount = filtered.length || 1;
+    statusDistContainer.innerHTML = ALL_STATUSES.map(s => {
+      const c = counts[s] || 0;
+      const pct = Math.round((c / maxCount) * 100);
+      const color = statusColors[s] || "#2f6bff";
+      return `
+        <div class="dist-item">
+          <div class="dist-info">
+            <span>${s}</span>
+            <span>${c} (${pct}%)</span>
+          </div>
+          <div class="dist-bar-track">
+            <div class="dist-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // 3. Hardware Readiness Overview
+  const hwReadinessContainer = el("hwReadinessContainer");
+  if(hwReadinessContainer){
+    const totalCount = filtered.length || 1;
+    const gpsOk = filtered.filter(d => d.gps).length;
+    const chargerOk = filtered.filter(d => d.charger).length;
+    const gpsPct = Math.round((gpsOk / totalCount) * 100);
+    const chargerPct = Math.round((chargerOk / totalCount) * 100);
+
+    hwReadinessContainer.innerHTML = `
+      <div class="hw-item">
+        <div class="hw-title">
+          <span>📡 מקלט GPS מותקן</span>
+          <span style="color: #b9ccff;">${gpsOk} / ${filtered.length} (${gpsPct}%)</span>
+        </div>
+        <div class="dist-bar-track">
+          <div class="dist-bar-fill" style="width: ${gpsPct}%; background: #2f6bff;"></div>
+        </div>
+      </div>
+      <div class="hw-item">
+        <div class="hw-title">
+          <span>🔌 מטען זמין</span>
+          <span style="color: #a7ffbf;">${chargerOk} / ${filtered.length} (${chargerPct}%)</span>
+        </div>
+        <div class="dist-bar-track">
+          <div class="dist-bar-fill" style="width: ${chargerPct}%; background: #1e7f3a;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 4. Location Breakdown
+  const locationList = el("locationList");
+  if(locationList){
+    const locMap = {};
+    for(const d of filtered){
+      const loc = (d.location || "לא צוין").trim();
+      if(!locMap[loc]) locMap[loc] = { total: 0, statuses: {} };
+      locMap[loc].total++;
+      locMap[loc].statuses[d.status] = (locMap[loc].statuses[d.status] || 0) + 1;
+    }
+
+    const locEntries = Object.entries(locMap).sort((a,b) => b[1].total - a[1].total);
+    if(locEntries.length === 0){
+      locationList.innerHTML = `<div style="color: var(--muted); padding: 12px;">אין נתונים להצגה לפי הפילטר הנבחר.</div>`;
+    } else {
+      locationList.innerHTML = locEntries.map(([name, data]) => {
+        const badgesHtml = Object.entries(data.statuses).map(([st, count]) => `
+          <span class="badge ${statusClass(st)}" style="font-size:10px; padding:2px 6px;">${count} ${st}</span>
+        `).join("");
+        return `
+          <div class="loc-item">
+            <div>
+              <div class="loc-name">${name}</div>
+              <div style="font-size: 11px; color: var(--muted); margin-top:2px;">${data.total} כלים בסה״כ</div>
+            </div>
+            <div class="loc-badges">${badgesHtml}</div>
+          </div>
+        `;
+      }).join("");
+    }
+  }
+
+  // 5. Insights
+  const dashInsights = el("dashInsights");
+  if(dashInsights){
+    const missingHwDrones = filtered.filter(d => d.status === "רחפן תקין- חוסר בחומרה");
+    const readyDrones = filtered.filter(d => d.status === "רחפן מוכן למסירה");
+    const noCharger = filtered.filter(d => (d.status === "תקין" || d.status === "רחפן מוכן למסירה") && !d.charger);
+
+    dashInsights.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="background:#0f1a31; padding:10px 12px; border-radius:10px; border-right: 4px solid #00b4a0;">
+          <strong style="color:#85ffed;">🚀 מוכנים למסירה:</strong> ${readyDrones.length} כלים
+          ${readyDrones.length ? `<div style="font-size:12px; opacity:0.8; margin-top:2px;">מספרים: ${readyDrones.map(d=>d.id).join(", ")}</div>` : ''}
+        </div>
+        <div style="background:#0f1a31; padding:10px 12px; border-radius:10px; border-right: 4px solid #ffa000;">
+          <strong style="color:#ffd685;">🛠️ דורשים השלמת חומרה:</strong> ${missingHwDrones.length} כלים
+          ${missingHwDrones.length ? `<div style="font-size:12px; opacity:0.8; margin-top:2px;">מספרים: ${missingHwDrones.map(d=>d.id).join(", ")}</div>` : ''}
+        </div>
+        <div style="background:#0f1a31; padding:10px 12px; border-radius:10px; border-right: 4px solid #2f6bff;">
+          <strong style="color:#b9ccff;">⚡ תקינים ללא מטען:</strong> ${noCharger.length} כלים
+        </div>
+      </div>
+    `;
+  }
+
+  // 6. Drone Cards Grid
+  const droneCardsGrid = el("droneCardsGrid");
+  const dashFilteredCount = el("dashFilteredCount");
+  if(dashFilteredCount) dashFilteredCount.textContent = sorted.length;
+
+  if(droneCardsGrid){
+    if(sorted.length === 0){
+      droneCardsGrid.innerHTML = `<div style="grid-column: 1/-1; color: var(--muted); padding: 20px; text-align: center;">לא נמצאו כלים התואמים את החיפוש והפילטרים.</div>`;
+    } else {
+      droneCardsGrid.innerHTML = sorted.map(d => `
+        <div class="drone-card-item">
+          <div class="drone-card-header">
+            <span class="drone-card-id">#${d.id}</span>
+            <span class="badge ${statusClass(d.status)}">${d.status || "ללא סטטוס"}</span>
+          </div>
+          <div class="drone-card-location">
+            <span>📍</span>
+            <span>${d.location || "מיקום לא עודכן"}</span>
+            <span class="drone-card-type" style="margin-right:auto;">${d.type || "רחפן"}</span>
+          </div>
+          <div class="drone-card-hw">
+            <span class="hw-tag ${d.gps ? 'ok' : ''}">GPS: ${d.gps ? '✓' : '✗'}</span>
+            <span class="hw-tag ${d.charger ? 'ok' : ''}">מטען: ${d.charger ? '✓' : '✗'}</span>
+            ${d.version ? `<span class="hw-tag">v${d.version}</span>` : ''}
+          </div>
+          ${(d.issues || d.notes) ? `
+            <div class="drone-card-notes">
+              ${d.issues ? `<div><strong>תקלות:</strong> ${d.issues}</div>` : ''}
+              ${d.notes ? `<div><strong>הערות:</strong> ${d.notes}</div>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `).join("");
+    }
+  }
 }
 
 async function loadLocalJson(){
@@ -355,7 +611,7 @@ function initFirebase(){
       if(fb.user){
         try{
           await loadFromFirestore();
-          renderTable();
+          renderAllViews();
         }catch(e){
           console.error(e);
         }
@@ -437,7 +693,7 @@ async function doLogin(){
     await fb.auth.signInWithEmailAndPassword(email, password);
     await seedFirestoreIfEmpty();
     await loadFromFirestore();
-    renderTable();
+    renderAllViews();
   }catch(e){
     alert("שגיאת התחברות: " + e.message);
   }
@@ -621,9 +877,28 @@ function wire(){
     }
   });
 
-  el("search")?.addEventListener("input", ()=>renderTable());
-  el("statusFilter")?.addEventListener("change", ()=>renderTable());
-  el("typeFilter")?.addEventListener("change", ()=>renderTable());
+  // Tabs wiring
+  el("tabTableBtn")?.addEventListener("click", () => {
+    activeTab = "table";
+    el("tabTableBtn").classList.add("active");
+    el("tabDashBtn").classList.remove("active");
+    el("tableView").classList.remove("hidden");
+    el("dashboardView").classList.add("hidden");
+    renderTable();
+  });
+
+  el("tabDashBtn")?.addEventListener("click", () => {
+    activeTab = "dashboard";
+    el("tabDashBtn").classList.add("active");
+    el("tabTableBtn").classList.remove("active");
+    el("dashboardView").classList.remove("hidden");
+    el("tableView").classList.add("hidden");
+    renderDashboard();
+  });
+
+  el("search")?.addEventListener("input", ()=>renderAllViews());
+  el("statusFilter")?.addEventListener("change", ()=>renderAllViews());
+  el("typeFilter")?.addEventListener("change", ()=>renderAllViews());
   el("addDrone")?.addEventListener("click", async ()=>{
     promptAddDrone();
     if(fb.enabled && fb.user){
@@ -635,7 +910,7 @@ function wire(){
     if(editMode){
       applyEditsFromDom();
       editMode = false;
-      renderTable();
+      renderAllViews();
 
       if(fb.enabled){
         if(!fb.user){ alert("כדי לשמור ל-Firestore צריך להתחבר."); return; }
@@ -643,7 +918,7 @@ function wire(){
       }
     }else{
       editMode = true;
-      renderTable();
+      renderAllViews();
     }
   });
 
@@ -684,17 +959,22 @@ el("applyPasteBtn")?.addEventListener("click", async () => {
     return;
   }
 
-  // טעינה לוקאלית לטבלה
-  state.drones = drones;
-  renderTable();
-  hint.textContent = `✅ נטענו ${drones.length} רחפנים לטבלה`;
+  // טעינה לוקאלית לטבלה ולדשבורד
+  working.drones = drones;
+  stamp();
+  renderAllViews();
+  hint.textContent = `✅ נטענו ${drones.length} רחפנים לטבלה ולדשבורד`;
 
   // שמירה ל-DB רק אם מחובר
   if(fb.user){
     const ok = confirm("לשמור גם ל-Firestore?");
     if(ok){
-      await importToDb(drones);
-      hint.textContent += " + נשמר ל-DB ✅";
+      try{
+        await saveToFirestore();
+        hint.textContent += " + נשמר ל-DB ✅";
+      }catch(e){
+        hint.textContent += " (שגיאה בשמירה ל-DB: " + e.message + ")";
+      }
     }
   } else {
     hint.textContent += " (לוקאלי בלבד – התחבר כדי לשמור ל-DB)";
@@ -716,7 +996,7 @@ el("clearPasteBtn")?.addEventListener("click", () => {
   try{
     working = await loadLocalJson(); // show something immediately
     stamp();
-    renderTable();
+    renderAllViews();
   }catch(err){
     const lu = el("lastUpdated");
     if(lu) lu.textContent = "שגיאה בטעינת נתונים: " + err.message;
